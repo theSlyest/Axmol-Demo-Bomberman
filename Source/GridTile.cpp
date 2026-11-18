@@ -9,27 +9,24 @@ const std::map<TileState, ax::Color4F> GridTile::COLORS {
 };
 
 const ax::Color4F GridTile::BORDER_COLOR(0.73f, 0.73f, 0.66f, 1.0f);
-const Color4F GridTile::BOMB_COLOR(0.28f, 0.36f, 0.45f, 1.0f);
 const Color4F GridTile::FIRE_COLOR(0.92f, 0.34f, 0.29f, 1.0f);
 
 // on "init" you need to initialize your instance
-bool GridTile::init(TileState state)
+bool GridTile::init(const TileState state)
 {
-    if ( !DrawNode::init() )
-    {
+    if (!DrawNode::init())
         return false;
-    }
 
     setContentSize(Size(SIZE, SIZE));
 
     _state = state;
     drawState(state);
 
-    auto border = DrawNode::create();
+    const auto border = DrawNode::create();
     border->drawRect(Vec2::ZERO, Vec2(_contentSize), BORDER_COLOR, 1.0f);
     addChild(border);
 
-    Vec2 offset(3.0f, 3.0f);
+    constexpr Vec2 offset(3.0f, 3.0f);
     _fire = DrawNode::create();
     _fire->setContentSize(_contentSize);
     _fire->drawSolidRect(offset, Vec2(_contentSize) - offset, FIRE_COLOR);
@@ -74,7 +71,7 @@ void GridTile::startFire()
     _fire->setVisible(true);
 }
 
-bool GridTile::updateState(float dt)
+bool GridTile::updateState(const float dt)
 {
     if (_state == TileState::BOMB || _fire->isVisible()) {
         _remaining -= dt;
@@ -90,12 +87,12 @@ bool GridTile::updateState(float dt)
     return false;
 }
 
-void GridTile::stopFire()
+void GridTile::stopFire() const
 {
     _fire->setVisible(false);
 }
 
-void GridTile::drawState(TileState state)
+void GridTile::drawState(const TileState state)
 {
     clear();
     if (state == TileState::BOMB)
@@ -104,10 +101,9 @@ void GridTile::drawState(TileState state)
         drawSolidRect(Vec2::ZERO, Vec2(_contentSize), COLORS.at(state));
 }
 
-GridTile* GridTile::create(TileState state)
+GridTile* GridTile::create(const TileState state)
 {
-    GridTile *pRet = new(std::nothrow) GridTile();
-    if (pRet && pRet->init(state))
+    if (auto* pRet = new (std::nothrow) GridTile(); pRet && pRet->init(state))
     {
         pRet->autorelease();
         return pRet;

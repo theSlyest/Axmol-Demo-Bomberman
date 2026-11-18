@@ -9,8 +9,7 @@ const Color4F BomberBomb::COLOR(0.28f, 0.36f, 0.45f, 1.0f);
 
 BomberBomb* BomberBomb::create(BomberPlayer* player)
 {
-    BomberBomb *pRet = new(std::nothrow) BomberBomb();
-    if (pRet && pRet->init(player))
+    if (auto* pRet = new (std::nothrow) BomberBomb(); pRet && pRet->init(player))
     {
         pRet->autorelease();
         return pRet;
@@ -42,8 +41,8 @@ bool BomberBomb::init(BomberPlayer* player)
     }
 
     setContentSize(Size(GridTile::SIZE, GridTile::SIZE));
-    const float middle = GridTile::SIZE / 2.0f;
-    const Vec2 center(middle, middle);
+    constexpr float middle = GridTile::SIZE / 2.0f;
+    constexpr Vec2 center(middle, middle);
     const float radius = SIZE / 2.0f;
     drawSolidCircle(center, radius, 0.0f, radius * M_PI, COLOR);
     drawCircle(center, radius, 0.0f, radius * M_PI, false, Color4F::WHITE);

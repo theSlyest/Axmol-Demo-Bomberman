@@ -1,7 +1,6 @@
-#ifndef __BOMBERMAN_BOMB_H__
-#define __BOMBERMAN_BOMB_H__
+#pragma once
 
-#include "axmol.h"
+#include "2d/DrawNode.h"
 #include "BomberPlayer.h"
 
 class BomberBomb : public ax::DrawNode
@@ -19,7 +18,5 @@ public:
 private:
     static const ax::Color4F COLOR;
 
-    BomberPlayer* _player;
+    BomberPlayer* _player = nullptr;
 };
-
-#endif // __BOMBERMAN_BOMB_H__

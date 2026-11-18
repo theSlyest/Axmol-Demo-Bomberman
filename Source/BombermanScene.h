@@ -1,5 +1,4 @@
-#ifndef __BOMBERMAN_SCENE_H__
-#define __BOMBERMAN_SCENE_H__
+#pragma once
 
 #include "axmol.h"
 #include "BomberGrid.h"
@@ -9,12 +8,12 @@
 class BombermanScene : public ax::Scene
 {
 public:
-    virtual bool init();
+    bool init() override;
     
     // implement the "static create()" method manually
     CREATE_FUNC(BombermanScene);
 
-    virtual void update(float dt) override;
+    void update(float dt) override;
 
     void reset();
 
@@ -34,22 +33,22 @@ private:
         { ax::EventKeyboard::KeyCode::KEY_LEFT_ARROW,  ax::Vec2(-1,  0) }
     };
 
-    int _score;
-    int _time;
-    int _lives;
-    float _elapsed;
+    int _score = 0;
+    int _time  = 0;
+    int _lives = 0;
+    float _elapsed = 0;
 
-    ax::Label* _scoreLbl;
-    ax::Label* _endScoreLbl;
-    ax::Label* _timeLbl;
-    ax::Label* _livesLbl;
-    ax::LayerColor* _endLayer;
+    ax::Label* _scoreLbl = nullptr;
+    ax::Label* _endScoreLbl = nullptr;
+    ax::Label* _timeLbl = nullptr;
+    ax::Label* _livesLbl = nullptr;
+    ax::LayerColor* _endLayer = nullptr;
 
-    BomberGrid* _grid;
-    BomberPlayer* _player;
+    BomberGrid* _grid = nullptr;
+    BomberPlayer* _player = nullptr;
     std::vector<BomberPlayer*> _enemies;
 
-    ax::EventListenerKeyboard* _keyboardListener;
+    ax::EventListenerKeyboard* _keyboardListener = nullptr;
     ax::Vec2 _keyDirection;
 
     void initScore(const ax::Vec2& origin, const ax::Size& size);
@@ -69,20 +68,20 @@ private:
     void onKeyReleased(ax::EventKeyboard::KeyCode key);
 
     void updatePlayer(float dt);
-    void movePlayer(const ax::Vec2& direction);
+    void movePlayer(const ax::Vec2& direction) const;
 
     void updateEnemy(float dt, BomberPlayer* enemy);
-    ax::Vec2 chooseDirection(BomberPlayer* enemy);
+    ax::Vec2 chooseDirection(const ax::Vec2& pos) const;
 
     void updateTime(float dt);
 
-    void tryBomb(BomberPlayer* player);
-    bool checkBurnt(BomberPlayer* player);
+    void tryBomb(BomberPlayer* player) const;
+    bool checkBurnt(const BomberPlayer* player) const;
+    bool checkEnemyContact() const;
+    void respawnPlayer() const;
 
     void showGameOver();
     void loseLife();
 
-    void resetEnemies();
+    void resetEnemies() const;
 };
-
-#endif // __BOMBERMAN_SCENE_H__

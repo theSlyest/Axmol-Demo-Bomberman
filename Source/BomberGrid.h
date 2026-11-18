@@ -1,5 +1,4 @@
-#ifndef __BOMBERMAN_GRID_H__
-#define __BOMBERMAN_GRID_H__
+#pragma once
 
 #include "axmol.h"
 #include "GridTile.h"
@@ -12,22 +11,22 @@ public:
     static constexpr int COLS = 13;
     static constexpr int ROWS = 11;
 
-    virtual bool init();
+    bool init() override;
     
     // implement the "static create()" method manually
     CREATE_FUNC(BomberGrid);
 
     ax::Vec2 getTilePosition(const int col, const int row) const { return _tiles[col][row]->getPosition(); }
     TileState getTileState(const int col, const int row) const  { return _tiles[col][row]->getState(); }
-    void setTileState(const int col, const int row, const TileState state) { _tiles[col][row]->setState(state); }
+    void setTileState(const int col, const int row, const TileState state) const { _tiles[col][row]->setState(state); }
 
-    GridTile* getTile(const ax::Vec2& position);
-    GridCoords getCoords(const ax::Vec2& position);
+    GridTile* getTile(const ax::Vec2& position) const;
+    GridCoords getCoords(const ax::Vec2& position) const;
 
-    void reset();
+    void reset() const;
 
-    void detonate(const int col, const int row);
-    void detonate(GridTile* tile);
+    void detonate(int col, int row);
+    void detonate(const GridTile* tile);
 
     void update(float dt) override;
 
@@ -42,7 +41,5 @@ private:
 
     std::vector<std::vector<GridTile*>> _tiles;
 
-    bool tryFire(const int col, const int row);
+    bool tryFire(int col, int row);
 };
-
-#endif // __BOMBERMAN_GRID_H__

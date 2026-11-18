@@ -1,5 +1,4 @@
-#ifndef __BOMBERMAN_PLAYER_H__
-#define __BOMBERMAN_PLAYER_H__
+#pragma once
 
 #include "axmol.h"
 
@@ -24,7 +23,7 @@ public:
     void setDestination(const ax::Vec2& dest) { _destination = dest; }
     ax::Vec2 getDestination() const { return _destination; }
 
-    bool hasReachedDestination(const ax::Vec2 &nextPos);
+    bool hasReachedDestination(const ax::Vec2 &nextPos) const;
 
     void dropBomb();
     void clearBomb();
@@ -44,9 +43,7 @@ private:
     ax::Vec2 _direction;
     ax::Vec2 _destination;
 
-    float _speed;
-    float _remaining;
-    bool _hasBomb;
+    float _speed = 0;
+    float _remaining = 0;
+    bool _hasBomb    = false;
 };
-
-#endif // __BOMBERMAN_PLAYER_H__

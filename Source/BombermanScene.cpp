@@ -5,13 +5,11 @@ USING_NS_AX;
 // on "init" you need to initialize your instance
 bool BombermanScene::init()
 {
-    if ( !Scene::init() )
-    {
+    if (!Scene::init())
         return false;
-    }
 
-    auto visibleSize = Director::getInstance()->getVisibleSize();
-    Vec2 origin = Director::getInstance()->getVisibleOrigin();
+    const auto visibleSize = Director::getInstance()->getVisibleSize();
+    const Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
     initScore(origin, visibleSize);
     initTime(origin, visibleSize);
@@ -30,14 +28,17 @@ void BombermanScene::update(float dt)
     updateTime(dt);
     _grid->update(dt);
     updatePlayer(dt);
-    for (int i = 0; i < 3; ++i)
-        updateEnemy(dt, _enemies[i]);
+    for (const auto enemy : _enemies)
+        updateEnemy(dt, enemy);
 }
 
 void BombermanScene::reset()
 {
     _grid->reset();
-    _player->setPosition(_grid->getTilePosition(1, 1));
+    respawnPlayer();
+    _player->setInvincible(false);
+    _player->clearBomb();
+    _keyDirection = Vec2::ZERO;
     resetEnemies();
     setLives(START_LIVES);
     setTime(START_TIME);
@@ -128,13 +129,13 @@ void BombermanScene::initKeyboardListener()
     _keyDirection = Vec2::ZERO;
 }
 
-void BombermanScene::setScore(int score)
+void BombermanScene::setScore(const int score)
 {
     _score = score;
     _scoreLbl->setString("Score: " + std::to_string(score));
 }
 
-void BombermanScene::setTime(int time)
+void BombermanScene::setTime(const int time)
 {
     _time = time;
     _timeLbl->setString("Time: " + std::to_string(time));
@@ -173,7 +174,10 @@ void BombermanScene::onKeyPressed(EventKeyboard::KeyCode key)
         case EventKeyboard::KeyCode::KEY_R:
             reset();
             break;
-    }
+
+        default:
+            break;
+        }
 }
 
 void BombermanScene::onKeyReleased(EventKeyboard::KeyCode key)
@@ -183,26 +187,25 @@ void BombermanScene::onKeyReleased(EventKeyboard::KeyCode key)
         case EventKeyboard::KeyCode::KEY_RIGHT_ARROW:
         case EventKeyboard::KeyCode::KEY_UP_ARROW:
         case EventKeyboard::KeyCode::KEY_DOWN_ARROW:
-            if (_endLayer->isVisible())
-                return;
-
             if (_keyDirection != DIRECTIONS.at(key))
                 return;
             
             _keyDirection = Vec2::ZERO;
             break;
-    }
+
+        default:
+            break;
+        }
 }
 
-void BombermanScene::updatePlayer(float dt)
+void BombermanScene::updatePlayer(const float dt)
 {
     _player->update(dt);
-    const Vec2& direction = _player->getDirection();
 
-    if (direction != Vec2::ZERO) {
-        Vec2 nextPos = _player->getPosition() + direction * _player->getSpeed() * dt;
+    if (const Vec2& direction = _player->getDirection(); direction != Vec2::ZERO) {
+        const Vec2 nextPos = _player->getPosition() + direction * _player->getSpeed() * dt;
         if (_player->hasReachedDestination(nextPos)) {
-            Vec2 dest = _player->getDestination();
+            const Vec2 dest = _player->getDestination();
             if (direction == _keyDirection) {
                 const Vec2 nextDest = dest + direction * GridTile::SIZE;
                 if (_grid->getTile(nextDest)->getState() == TileState::SAFE) {
@@ -230,11 +233,11 @@ void BombermanScene::updatePlayer(float dt)
         }
     }
 
-    if (checkBurnt(_player))
+    if (checkBurnt(_player) || checkEnemyContact())
         loseLife();
 }
 
-void BombermanScene::movePlayer(const ax::Vec2 &direction)
+void BombermanScene::movePlayer(const ax::Vec2 &direction) const
 {
     const Vec2& oldDirection = _player->getDirection();
     if (oldDirection == Vec2::ZERO) {
@@ -260,8 +263,8 @@ void BombermanScene::updateEnemy(float dt, BomberPlayer *enemy)
     if (direction != Vec2::ZERO) {
         Vec2 nextPos = enemy->getPosition() + direction * enemy->getSpeed() * dt;
         if (enemy->hasReachedDestination(nextPos)) {
-            Vec2 nextDirection = chooseDirection(enemy);
-            Vec2 dest = enemy->getDestination();
+            const Vec2 nextDirection = chooseDirection(enemy->getDestination());
+            const Vec2 dest = enemy->getDestination();
             if (direction == nextDirection) {
                 const Vec2 nextDest = dest + direction * GridTile::SIZE;
                 if (_grid->getTile(nextDest)->getState() == TileState::SAFE) {
@@ -288,7 +291,7 @@ void BombermanScene::updateEnemy(float dt, BomberPlayer *enemy)
             enemy->setPosition(nextPos);
     }
     else {
-        const Vec2& nextDirection = chooseDirection(enemy);
+        const Vec2 nextDirection = chooseDirection(enemy->getPosition());
         enemy->setDestination(enemy->getPosition() + nextDirection * GridTile::SIZE);
         enemy->setDirection(nextDirection);
     }
@@ -298,7 +301,7 @@ void BombermanScene::updateEnemy(float dt, BomberPlayer *enemy)
         enemy->setVisible(false);
 
         bool won = true;
-        for (auto e : _enemies) {
+        for (const auto e : _enemies) {
             if (e->isVisible()) {
                 won = false;
                 break;
@@ -310,14 +313,13 @@ void BombermanScene::updateEnemy(float dt, BomberPlayer *enemy)
     }
 }
 
-ax::Vec2 BombermanScene::chooseDirection(BomberPlayer *enemy)
+ax::Vec2 BombermanScene::chooseDirection(const Vec2& pos) const
 {
     std::vector<Vec2> dirs;
-    Vec2 pos = enemy->getPosition();
     for (const auto& dir : DIRECTIONS) {
         const Vec2 next = pos + dir.second * GridTile::SIZE;
         auto tile = _grid->getTile(next);
-        if (tile->getState() == TileState::SAFE/* && !tile->isOnFire()*/)
+        if (tile->getState() == TileState::SAFE)
             dirs.push_back(dir.second);
     }
 
@@ -326,49 +328,50 @@ ax::Vec2 BombermanScene::chooseDirection(BomberPlayer *enemy)
 
     return dirs[random(0ul, dirs.size() - 1)];
 }
-void BombermanScene::updateTime(float dt)
+
+void BombermanScene::updateTime(const float dt)
 {
     _elapsed += dt;
     if (_elapsed >= 1.0f) {
         setTime(_time - 1);
 
-        if (_time == 0.0f)
+        if (_time == 0)
             showGameOver();
 
-        _elapsed = 1.0f - _elapsed;
+        _elapsed -= 1.0f;
     }
 }
 
-void BombermanScene::tryBomb(BomberPlayer* bomber)
+void BombermanScene::tryBomb(BomberPlayer* player) const
 {
-    if (bomber->hasBomb())
+    if (player->hasBomb())
         return;
-    
-    auto tile = _grid->getTile(bomber->getPosition() + Vec2(GridTile::SIZE, GridTile::SIZE) / 2.0f);
+
+    const auto tile = _grid->getTile(player->getPosition() + Vec2(GridTile::SIZE, GridTile::SIZE) / 2.0f);
     if (tile->getState() != TileState::SAFE)
         return;
 
     if (tile->isOnFire())
         _grid->detonate(tile);
     else {
-        auto bomb = BomberBomb::create(bomber);
+        const auto bomb = BomberBomb::create(player);
         bomb->setPosition(tile->getPosition());
         _grid->addChild(bomb);
         tile->setBomb(bomb);
-        bomber->dropBomb();
+        player->dropBomb();
     }
 }
 
-bool BombermanScene::checkBurnt(BomberPlayer *bomber)
+bool BombermanScene::checkBurnt(const BomberPlayer *player) const
 {
-    if (bomber->isInvincible())
+    if (player->isInvincible())
         return false;
 
-    auto tile1 = _grid->getTile(bomber->getPosition() + Vec2(BomberPlayer::OFFSET, BomberPlayer::OFFSET));
+    const auto tile1 = _grid->getTile(player->getPosition() + Vec2(BomberPlayer::OFFSET, BomberPlayer::OFFSET));
     if (tile1->isOnFire())
         return true;
-    
-    auto tile2 = _grid->getTile(bomber->getPosition() + Vec2(GridTile::SIZE - BomberPlayer::OFFSET, GridTile::SIZE -BomberPlayer::OFFSET));
+
+    const auto tile2 = _grid->getTile(player->getPosition() + Vec2(GridTile::SIZE - BomberPlayer::OFFSET, GridTile::SIZE -BomberPlayer::OFFSET));
     if (tile2 != tile1 && tile2->isOnFire())
         return true;
 
@@ -382,23 +385,48 @@ void BombermanScene::showGameOver()
     _endLayer->setVisible(true);
 }
 
+bool BombermanScene::checkEnemyContact() const
+{
+    if (_player->isInvincible())
+        return false;
+
+    const Vec2 pos = _player->getPosition();
+    for (const auto enemy : _enemies) {
+        if (!enemy->isVisible())
+            continue;
+
+        const Vec2 delta = enemy->getPosition() - pos;
+        if (std::abs(delta.x) < BomberPlayer::SIZE && std::abs(delta.y) < BomberPlayer::SIZE)
+            return true;
+    }
+
+    return false;
+}
+
+void BombermanScene::respawnPlayer() const
+{
+    _player->setPosition(_grid->getTilePosition(1, 1));
+    _player->setDirection(Vec2::ZERO);
+    _player->setDestination(_player->getPosition());
+}
+
 void BombermanScene::loseLife()
 {
     setLives(_lives - 1);
     if (_lives == 0)
         showGameOver();
     else {
-        _player->setPosition(_grid->getTilePosition(1, 1));
+        respawnPlayer();
         _player->setInvincible(true);
     }
 }
 
-void BombermanScene::resetEnemies()
+void BombermanScene::resetEnemies() const
 {
     _enemies[0]->setPosition(_grid->getTilePosition(1, 9));
     _enemies[1]->setPosition(_grid->getTilePosition(11, 1));
     _enemies[2]->setPosition(_grid->getTilePosition(11, 9));
-    for (auto& enemy : _enemies) {
+    for (const auto& enemy : _enemies) {
         enemy->setDirection(Vec2::ZERO);
         enemy->setVisible(true);
     }

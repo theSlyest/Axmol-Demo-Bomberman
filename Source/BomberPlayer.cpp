@@ -7,10 +7,9 @@ USING_NS_AX;
 const Color4F BomberPlayer::PLAYER_COLOR = Color4F(0.28f, 0.36f, 0.94f, 1.0f);
 const Color4F BomberPlayer::ENEMY_COLOR = Color4F(0.33f, 0.79f, 0.21f, 1.0f);
 
-BomberPlayer* BomberPlayer::create(bool isEnemy)
+BomberPlayer* BomberPlayer::create(const bool isEnemy)
 {
-    BomberPlayer *pRet = new(std::nothrow) BomberPlayer();
-    if (pRet && pRet->init(isEnemy))
+    if (auto* pRet = new (std::nothrow) BomberPlayer(); pRet && pRet->init(isEnemy))
     {
         pRet->autorelease();
         return pRet;
@@ -24,7 +23,7 @@ BomberPlayer* BomberPlayer::create(bool isEnemy)
 }
 
 // on "init" you need to initialize your instance
-bool BomberPlayer::init(bool isEnemy)
+bool BomberPlayer::init(const bool isEnemy)
 {
     if ( !DrawNode::init() )
     {
@@ -34,12 +33,12 @@ bool BomberPlayer::init(bool isEnemy)
     setContentSize(Size(GridTile::SIZE, GridTile::SIZE));
 
     if (isEnemy) {
-        const float radius = SIZE / 2.0f;
+        constexpr float radius = SIZE / 2.0f;
         drawSolidCircle(Vec2(GridTile::SIZE / 2.0f, GridTile::SIZE / 2.0f), radius, 0.0f, radius * M_PI, ENEMY_COLOR);
         _speed = ENEMY_SPEED;
     } 
     else {
-        float offset = (GridTile::SIZE - SIZE) / 2.0f;
+        constexpr float offset = (GridTile::SIZE - SIZE) / 2.0f;
         drawSolidRect(Vec2(offset, offset), Vec2(GridTile::SIZE - offset, GridTile::SIZE - offset), PLAYER_COLOR);
         _speed = PLAYER_SPEED;
     }
@@ -53,7 +52,7 @@ bool BomberPlayer::init(bool isEnemy)
 }
 
 
-bool BomberPlayer::hasReachedDestination(const Vec2 &nextPos)
+bool BomberPlayer::hasReachedDestination(const Vec2 &nextPos) const
 {
     if (_direction.x > 0.0f && nextPos.x >= _destination.x)
         return true;

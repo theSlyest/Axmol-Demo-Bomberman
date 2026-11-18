@@ -5,10 +5,8 @@ USING_NS_AX;
 // on "init" you need to initialize your instance
 bool BomberGrid::init()
 {
-    if ( !Node::init() )
-    {
+    if (!Node::init())
         return false;
-    }
 
     setContentSize(Size(COLS * GridTile::SIZE, ROWS * GridTile::SIZE));
 
@@ -20,7 +18,7 @@ bool BomberGrid::init()
                 state = TileState::STEEL;
             else if (c % 2 == 0 && r % 2 == 0)
                 state = TileState::STEEL;
-            else if (SAFE_COORDS.count(GridCoords(c, r)))
+            else if (SAFE_COORDS.contains(GridCoords(c, r)))
                 state = TileState::SAFE;
             else
                 state = TileState::WALL;
@@ -36,17 +34,17 @@ bool BomberGrid::init()
     return true;
 }
 
-GridTile* BomberGrid::getTile(const ax::Vec2 &position)
+GridTile* BomberGrid::getTile(const ax::Vec2 &position) const
 {
     return _tiles[position.x / GridTile::SIZE][position.y / GridTile::SIZE];
 }
 
-GridCoords BomberGrid::getCoords(const ax::Vec2 &position)
+GridCoords BomberGrid::getCoords(const ax::Vec2 &position) const
 {
     return { position.x / GridTile::SIZE, position.y / GridTile::SIZE };
 }
 
-void BomberGrid::reset()
+void BomberGrid::reset() const
 {
     for (int c = 0; c < COLS; ++c) {
         for (int r = 0; r < ROWS; ++r) {
@@ -60,10 +58,7 @@ void BomberGrid::reset()
             tile->stopFire();
             tile->releaseBomb();
 
-            if (SAFE_COORDS.count(GridCoords(c, r)))
-                continue;
-
-            tile->setState(TileState::WALL);
+            tile->setState(SAFE_COORDS.contains(GridCoords(c, r)) ? TileState::SAFE : TileState::WALL);
         }
     }
 }
@@ -115,18 +110,17 @@ void BomberGrid::detonate(const int col, const int row)
     }
 }
 
-void BomberGrid::detonate(GridTile *tile)
+void BomberGrid::detonate(const GridTile *tile)
 {
     const GridCoords& coords = getCoords(tile->getPosition());
     detonate(coords.first, coords.second);
 }
 
-void BomberGrid::update(float dt)
+void BomberGrid::update(const float dt)
 {
     for (int c = 1; c < COLS - 1; ++c) {
         for (int r = 1; r < ROWS - 1; ++r) {
-            auto tile = _tiles[c][r];
-            if (tile->getState() == TileState::BOMB || tile->isOnFire())
+            if (const auto tile = _tiles[c][r]; tile->getState() == TileState::BOMB || tile->isOnFire())
                 if (tile->updateState(dt))
                     detonate(c, r);
         }
