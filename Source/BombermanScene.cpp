@@ -141,13 +141,13 @@ void BombermanScene::setTime(const int time)
     _timeLbl->setString("Time: " + std::to_string(time));
 }
 
-void BombermanScene::setLives(int lives)
+void BombermanScene::setLives(const int lives)
 {
     _lives = lives;
     _livesLbl->setString("Lives: " + std::to_string(lives));
 }
 
-void BombermanScene::onKeyPressed(EventKeyboard::KeyCode key)
+void BombermanScene::onKeyPressed(const EventKeyboard::KeyCode key)
 {
     switch (key) {
         case EventKeyboard::KeyCode::KEY_LEFT_ARROW:

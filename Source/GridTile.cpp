@@ -36,7 +36,7 @@ bool GridTile::init(const TileState state)
     return true;
 }
 
-void GridTile::setState(TileState state)
+void GridTile::setState(const TileState state)
 {
     _state = state;
     drawState(state);
