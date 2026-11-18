@@ -1,6 +1,6 @@
 #pragma once
 
-#include "axmol.h"
+#include "2d/Node.h"
 #include "GridTile.h"
 
 using GridCoords = std::pair<int, int>;

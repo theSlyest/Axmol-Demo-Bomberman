@@ -1,13 +1,17 @@
 #pragma once
 
-#include "axmol.h"
+#include "2d/Label.h"
+#include "2d/Layer.h"
+#include "2d/Scene.h"
+#include "EventListenerKeyboard.h"
 #include "BomberGrid.h"
 #include "BomberPlayer.h"
-#include "BomberBomb.h"
 
 class BombermanScene : public ax::Scene
 {
 public:
+    BombermanScene() : ax::Scene() {};
+
     bool init() override;
     
     // implement the "static create()" method manually

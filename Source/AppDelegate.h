@@ -25,7 +25,6 @@
 
 #pragma once
 
-// #include "axmol.h"
 #include "platform/Application.h"
 
 /**

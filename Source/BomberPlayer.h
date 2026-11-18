@@ -1,6 +1,6 @@
 #pragma once
 
-#include "axmol.h"
+#include "2d/DrawNode.h"
 
 class BomberPlayer : public ax::DrawNode
 {

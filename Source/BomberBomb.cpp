@@ -35,10 +35,8 @@ void BomberBomb::releaseBomber()
 // on "init" you need to initialize your instance
 bool BomberBomb::init(BomberPlayer* player)
 {
-    if ( !DrawNode::init() )
-    {
+    if (!DrawNode::init())
         return false;
-    }
 
     setContentSize(Size(GridTile::SIZE, GridTile::SIZE));
     constexpr float middle = GridTile::SIZE / 2.0f;

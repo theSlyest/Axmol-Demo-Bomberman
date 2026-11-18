@@ -25,6 +25,10 @@
 
 #include "AppDelegate.h"
 #include "BombermanScene.h"
+#include "Director.h"
+#include "RenderViewImpl.h"
+#include "Utils.h"
+#include "2d/Scene.h"
 
 #define USE_AUDIO_ENGINE 1
 
@@ -84,7 +88,7 @@ bool AppDelegate::applicationDidFinishLaunching()
 
 #if !_AX_TESTS
     // create a scene. it's an autorelease object
-    auto scene = utils::createInstance<BombermanScene>();
+    const auto scene = utils::createInstance<BombermanScene>();
 
     // run
     director->runWithScene(scene);

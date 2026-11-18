@@ -25,10 +25,8 @@ BomberPlayer* BomberPlayer::create(const bool isEnemy)
 // on "init" you need to initialize your instance
 bool BomberPlayer::init(const bool isEnemy)
 {
-    if ( !DrawNode::init() )
-    {
+    if (!DrawNode::init())
         return false;
-    }
 
     setContentSize(Size(GridTile::SIZE, GridTile::SIZE));
 
@@ -79,7 +77,7 @@ void BomberPlayer::clearBomb()
     _hasBomb = false;
 }
 
-void BomberPlayer::update(float dt)
+void BomberPlayer::update(const float dt)
 {
     if (_remaining > 0.0f)
         _remaining -= dt;

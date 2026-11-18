@@ -2,13 +2,13 @@
 
 USING_NS_AX;
 
-const std::map<TileState, ax::Color4F> GridTile::COLORS {
+const std::map<TileState, Color4F> GridTile::COLORS {
     { TileState::SAFE, Color4F(0.0f, 0.0f, 0.0f, 1.0f) },
     { TileState::WALL, Color4F(0.60f, 0.40f, 0.05f, 1.0f) },
     { TileState::STEEL, Color4F(0.27f, 0.27f, 0.34f, 1.0f) },
 };
 
-const ax::Color4F GridTile::BORDER_COLOR(0.73f, 0.73f, 0.66f, 1.0f);
+const Color4F GridTile::BORDER_COLOR(0.73f, 0.73f, 0.66f, 1.0f);
 const Color4F GridTile::FIRE_COLOR(0.92f, 0.34f, 0.29f, 1.0f);
 
 // on "init" you need to initialize your instance

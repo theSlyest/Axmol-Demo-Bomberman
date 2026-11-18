@@ -1,5 +1,8 @@
 #include "BombermanScene.h"
 
+#include "Director.h"
+#include "EventDispatcher.h"
+
 USING_NS_AX;
 
 // on "init" you need to initialize your instance
@@ -8,8 +11,8 @@ bool BombermanScene::init()
     if (!Scene::init())
         return false;
 
-    const auto visibleSize = Director::getInstance()->getVisibleSize();
-    const Vec2 origin = Director::getInstance()->getVisibleOrigin();
+    const auto visibleSize = _director->getVisibleSize();
+    const Vec2 origin = _director->getVisibleOrigin();
 
     initScore(origin, visibleSize);
     initTime(origin, visibleSize);
@@ -237,7 +240,7 @@ void BombermanScene::updatePlayer(const float dt)
         loseLife();
 }
 
-void BombermanScene::movePlayer(const ax::Vec2 &direction) const
+void BombermanScene::movePlayer(const Vec2 &direction) const
 {
     const Vec2& oldDirection = _player->getDirection();
     if (oldDirection == Vec2::ZERO) {
@@ -253,7 +256,7 @@ void BombermanScene::movePlayer(const ax::Vec2 &direction) const
     }
 }
 
-void BombermanScene::updateEnemy(float dt, BomberPlayer *enemy)
+void BombermanScene::updateEnemy(const float dt, BomberPlayer *enemy)
 {
     if (!enemy->isVisible())
         return;
@@ -313,7 +316,7 @@ void BombermanScene::updateEnemy(float dt, BomberPlayer *enemy)
     }
 }
 
-ax::Vec2 BombermanScene::chooseDirection(const Vec2& pos) const
+Vec2 BombermanScene::chooseDirection(const Vec2& pos) const
 {
     std::vector<Vec2> dirs;
     for (const auto& dir : DIRECTIONS) {

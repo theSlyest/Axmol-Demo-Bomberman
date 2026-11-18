@@ -34,12 +34,12 @@ bool BomberGrid::init()
     return true;
 }
 
-GridTile* BomberGrid::getTile(const ax::Vec2 &position) const
+GridTile* BomberGrid::getTile(const Vec2 &position) const
 {
     return _tiles[position.x / GridTile::SIZE][position.y / GridTile::SIZE];
 }
 
-GridCoords BomberGrid::getCoords(const ax::Vec2 &position) const
+GridCoords BomberGrid::getCoords(const Vec2 &position) const
 {
     return { position.x / GridTile::SIZE, position.y / GridTile::SIZE };
 }
@@ -54,7 +54,7 @@ void BomberGrid::reset() const
             if (c % 2 == 0 && r % 2 == 0)
                 continue;
 
-            auto tile = _tiles[c][r];
+            const auto tile = _tiles[c][r];
             tile->stopFire();
             tile->releaseBomb();
 
@@ -65,8 +65,8 @@ void BomberGrid::reset() const
 
 bool BomberGrid::tryFire(const int col, const int row)
 {
-    auto tile = _tiles[col][row];
-    TileState state = tile->getState();
+    const auto tile = _tiles[col][row];
+    const TileState state = tile->getState();
     if (state == TileState::BOMB)
         detonate(col, row);
     else if (state != TileState::STEEL) {
