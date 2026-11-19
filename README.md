@@ -1,152 +1,74 @@
-# Axmol Examples
+# Axmol Demo: Bomberman
 
-A collection of small games, gameplay mechanics, and technical demonstrations built with [Axmol Engine](https://axmol.dev/) and C++.
+A small Bomberman built with [Axmol Engine](https://axmol.dev/) and C++, written as a learning resource. It covers basic grid-based bomb gameplay, and the code is split into small parts that are easy to read one at a time.
 
-The purpose of this repository is to provide compact, practical examples that can be studied, modified, and reused when learning Axmol or prototyping game mechanics.
+## Gameplay
 
-## Repository Structure
+- Move with the **arrow keys**, drop a bomb with **Space**, restart with **R**.
+- You have **3 lives** and **120 seconds**.
+- A bomb explodes after 2 seconds. The blast reaches 2 tiles in each direction, destroys walls, stops at steel, and sets off other bombs it touches.
+- You can have one bomb on the grid at a time.
+- Touching an enemy or standing in fire costs a life. You are briefly invincible after respawning.
+- Each enemy killed by a blast gives 100 points. Kill all three to win.
+- The game ends when you win, lose all lives, or the timer reaches 0.
 
-Each example is stored in its own Git branch.
-
-The `master` branch contains the base Axmol project used as a starting point. To explore an example, switch to the corresponding branch:
-
-```bash
-git clone https://github.com/theSlyest/AxmolExamples.git
-cd AxmolExamples
-git switch <example-branch>
-```
-
-For example:
-
-```bash
-git switch Minesweeper
-```
-
-You can list all available example branches with:
-
-```bash
-git branch --remotes
-```
-
-## Available Examples
-
-### Mini-games and puzzles
-
-| Branch         | Description                                                             |
-| -------------- | ----------------------------------------------------------------------- |
-| `Bomberman`    | A small game inspired by classic grid-based bomb mechanics.             |
-| `BrickBreaker` | A brick-breaking game with paddle, ball, and collision mechanics.       |
-| `Cooking`      | A cooking-themed gameplay prototype.                                    |
-| `CrossTheRoad` | A road-crossing game based on movement, timing, and obstacle avoidance. |
-| `DiskTower`    | A Tower of Hanoi-style puzzle.                                          |
-| `GridBalancer` | A grid-based balancing puzzle.                                          |
-| `Minesweeper`  | An implementation of the classic Minesweeper game.                      |
-| `Nonogram`     | A picture-logic puzzle based on row and column clues.                   |
-| `PegSolitaire` | An implementation of the classic peg solitaire puzzle.                  |
-| `Pentago`      | A board game featuring piece placement and rotating board sections.     |
-| `PoseMatch`    | A pose-matching gameplay prototype.                                     |
-| `Reversi`      | An implementation of the classic Reversi/Othello board game.            |
-| `RushHour`     | A sliding-block puzzle inspired by Rush Hour.                           |
-| `ShadowShape`  | A shape and shadow-matching game.                                       |
-| `Snake`        | An implementation of the classic Snake game.                            |
-| `Sudoku`       | An implementation of the classic number-placement puzzle.               |
-| `TetraStack`   | A block-stacking game using tetromino-like pieces.                      |
-| `WordGame`     | A word-based game prototype.                                            |
-
-### Action and gameplay mechanics
-
-| Branch             | Description                                                    |
-| ------------------ | -------------------------------------------------------------- |
-| `Escorting`        | An escort-oriented gameplay prototype.                         |
-| `LaserMirror`      | A laser-routing mechanic using reflective objects.             |
-| `RippleTank`       | A tank-based gameplay experiment featuring ripple effects.     |
-| `SideShooter`      | A side-view shooting game prototype.                           |
-| `SignalLock`       | A signal-based locking or synchronization mechanic.            |
-| `StealthDetection` | A demonstration of visibility and stealth-detection mechanics. |
-| `Teleporter`       | A teleportation gameplay mechanic.                             |
-
-### Technical and narrative examples
-
-| Branch        | Description                                                           |
-| ------------- | --------------------------------------------------------------------- |
-| `Clones`      | A gameplay experiment involving duplicated or synchronized entities.  |
-| `PathFinding` | A demonstration of pathfinding and grid navigation.                   |
-| `VisualNovel` | A basic visual-novel structure with narrative and dialogue mechanics. |
-
-> The examples are intentionally small and focused. They are designed as learning resources and prototypes rather than production-ready games.
+There are no image assets: everything is drawn with `DrawNode`.
 
 ## Requirements
 
 * A C++ development environment
 * [CMake](https://cmake.org/) 3.22 or later
-* [Axmol Engine](https://github.com/axmolengine/axmol)
-* The platform-specific tools required by Axmol
+* [Axmol Engine](https://github.com/axmolengine/axmol) and the platform tools it requires
 
-The base project currently targets Axmol Engine **2.11.4**.
+Refer to the [Axmol documentation](https://axmol.dev/manual/latest/) for installation and platform setup.
 
-Refer to the [Axmol documentation](https://axmol.dev/manual/latest/) for engine installation and platform setup instructions.
+## Build and run
 
-## Building an Example
-
-First, install and configure Axmol Engine. Then clone this repository and select the example you want to build:
+Clone the repository, then use the Axmol command-line tools:
 
 ```bash
-git clone https://github.com/theSlyest/AxmolExamples.git
-cd AxmolExamples
-git switch <example-branch>
+git clone https://github.com/theSlyest/Axmol-Demo-Bomberman.git
+cd Axmol-Demo-Bomberman
+axmol run -p osx -a arm64    # build and launch on Apple Silicon macOS
 ```
 
-Build the project using the standard Axmol workflow for your target platform.
+Change `-p` (and `-a`) for your platform, for example `-p win32` or `-p linux`. To build without launching, use `axmol build` with the same options. The platform project folders (`proj.android`, `proj.ios_mac`, `proj.linux`, `proj.wasm`, `proj.win32`, `proj.winrt`) come from the Axmol project template.
 
-For example, after configuring the Axmol command-line tools:
+## How the code is organized
 
-```bash
-axmol build
+The scene only builds nodes and connects them. Input, rules and presentation do not know about each other.
+
+```
+BombermanScene          creates the nodes, wires everything, forwards update(dt)
+ ├─ BomberControls      keyboard -> held direction + onDirectionPressed / onBomb / onRestart
+ ├─ BomberGame          rules and state; calls onScoreChanged / onLivesChanged /
+ │   │                  onTimeChanged / onGameOver
+ │   └─ EnemyBrain      decides where an enemy goes next
+ ├─ BomberHud           score, time and lives labels
+ ├─ BomberGameOverLayer overlay shown when the game ends
+ └─ BomberGrid          tiles, bombs and explosions (with the player and enemies as children)
 ```
 
-Available targets and build options may depend on your operating system and Axmol installation. Consult the Axmol build documentation for the appropriate platform-specific command.
+See [DESCRIPTION.md](DESCRIPTION.md) for a table of the Axmol concepts the code demonstrates, the file layout, and an example of swapping the enemy AI. The commit history follows the refactor step by step, so it also works as a walkthrough.
 
-## Learning from the Examples
+## Topics covered
 
-These projects may be useful for exploring topics such as:
-
-* Scene and node management
-* Touch, mouse, and keyboard input
-* Grid-based gameplay
-* Collision detection
-* Movement and animation
-* Board-game rules
-* Pathfinding
-* State management
-* Puzzle validation
-* User-interface implementation
-* Reusable gameplay components
-
-Because each example lives in an independent branch, its implementation can evolve without affecting the others.
-
-## Contributions
-
-Contributions, improvements, and bug fixes are welcome.
-
-If you would like to contribute:
-
-1. Fork the repository.
-2. Create a branch from the example you want to improve.
-3. Make and test your changes.
-4. Open a pull request describing the changes.
-
-For a new example, please keep the implementation compact and focused on a clearly identifiable game or technical concept.
+* Scene setup and node management
+* Keyboard input
+* Grid-based, tile-by-tile movement
+* Tile state machines and timers
+* Chain-reaction explosions
+* Swappable enemy behavior (strategy pattern)
+* Separating input, game rules and UI with callbacks
+* Procedural drawing with `DrawNode`
+* Reference counting (`retain` / `release`)
 
 ## Disclaimer
 
-This repository is primarily intended for experimentation and education. The examples may simplify architecture, error handling, content pipelines, or platform-specific considerations in order to keep the demonstrated concepts easy to understand.
+This project is intended for experimentation and education. It simplifies architecture, error handling and content in order to keep the concepts easy to follow.
 
 ## License
 
-This repository is licensed under the MIT License.
-
-You are free to use, modify, and distribute the source code, including in
-commercial projects, provided that the original copyright notice and license
-are retained. See the [LICENSE](LICENSE) file for details.
+This repository is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 Third-party assets and dependencies may be subject to their own licenses.
