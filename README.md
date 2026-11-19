@@ -105,11 +105,31 @@ _game = std::make_unique<BomberGame>(_grid, _player, _enemies, std::make_unique<
 | Grid-locked movement (move tile to tile, turn only at tile centres) | `BomberGame::updatePlayer`, `BomberGame::updateEnemy` |
 | Swappable enemy AI (strategy pattern) | `EnemyBrain`, `RandomWalkBrain` |
 | Inheritance for shared behavior (`BomberActor` → `BomberPlayer`, `BomberEnemy`) | `BomberActor` |
+| Unit tests with doctest for the code that needs no renderer | `Tests/` |
 | Procedural drawing with `DrawNode`, no image assets | `GridTile`, `BomberPlayer`, `BomberEnemy`, `BomberBomb` |
 | Tile state machine (`SAFE`, `WALL`, `STEEL`, `BOMB`) and timers | `GridTile`, `BomberGrid::update` |
 | Chain-reaction explosions, with the blast range as a constant | `BomberGrid::detonate`, `BomberGrid::BLAST_RANGE` |
 | Grid coordinates vs. pixel positions kept inside the grid | `BomberGrid::coordsToPosition`, `positionToCoords`, `neighborPosition`, `getTileAtCenter` |
 | Reference counting (`retain`/`release`) for objects shared between nodes | `GridTile::setBomb`, `BomberBomb` |
+
+## Tests
+
+The code that does not need a renderer has unit tests in `Tests/`, written with [doctest](https://github.com/doctest/doctest), which Axmol bundles:
+
+- the grid's coordinate helpers (`coordsToPosition`, `positionToCoords`, `neighborPosition`) and the direction constants
+- the actors' movement and timer logic (`hasReachedDestination`, spawn invincibility, bomb ownership)
+
+The game rules in `BomberGame` and the explosions in `BomberGrid` work on `DrawNode`s, and creating a node needs the renderer, so the test program cannot build them without a window. Those parts are covered by playing the game.
+
+Enable the test target when configuring, build it, and run the executable:
+
+```bash
+axmol build -p osx -a arm64 -f -xc '-D_AX_TESTS=ON'
+cmake --build build --target Axmol-Demo-Bomberman_test --config RelWithDebInfo
+build/bin/Axmol-Demo-Bomberman_test/RelWithDebInfo/Axmol-Demo-Bomberman_test.app/Contents/MacOS/Axmol-Demo-Bomberman_test
+```
+
+Pass `-D_AX_TESTS=OFF` when you are done to go back to building only the game.
 
 ## Source layout
 
@@ -123,6 +143,8 @@ _game = std::make_unique<BomberGame>(_grid, _player, _enemies, std::make_unique<
 - `Source/BomberActor.*`: shared walking behavior (direction, destination, speed, spawn invincibility).
 - `Source/BomberPlayer.*`, `Source/BomberEnemy.*`: the blue player (can drop a bomb) and the green enemies.
 - `Source/BomberBomb.*`: the bomb sprite, linked back to the player who dropped it.
+- `Tests/`: unit tests for the code that needs no renderer.
+
 ## Disclaimer
 
 This project is intended for experimentation and education. It simplifies architecture, error handling and content in order to keep the concepts easy to follow.
