@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "BomberControls.h"
+#include "BomberEnemy.h"
 #include "BomberGame.h"
 #include "BomberGameOverLayer.h"
 #include "BomberGrid.h"
@@ -32,7 +33,7 @@ private:
 
     BomberGrid* _grid = nullptr;
     BomberPlayer* _player = nullptr;
-    std::vector<BomberPlayer*> _enemies;
+    std::vector<BomberEnemy*> _enemies;
 
     BomberControls* _controls = nullptr;
     std::unique_ptr<BomberGame> _game;

@@ -23,7 +23,8 @@ A minimal Bomberman built with Axmol. It covers basic gameplay only: no power-up
 | HUD labels and a game-over overlay as their own nodes | `BomberHud`, `BomberGameOverLayer` |
 | Grid-locked movement (move tile to tile, turn only at tile centres) | `BomberGame::updatePlayer`, `BomberGame::updateEnemy` |
 | Swappable enemy AI (strategy pattern) | `EnemyBrain`, `RandomWalkBrain` |
-| Procedural drawing with `DrawNode`, no image assets | `GridTile`, `BomberPlayer`, `BomberBomb` |
+| Inheritance for shared behavior (`BomberActor` → `BomberPlayer`, `BomberEnemy`) | `BomberActor` |
+| Procedural drawing with `DrawNode`, no image assets | `GridTile`, `BomberPlayer`, `BomberEnemy`, `BomberBomb` |
 | Tile state machine (`SAFE`, `WALL`, `STEEL`, `BOMB`) and timers | `GridTile`, `BomberGrid::update` |
 | Chain-reaction explosions | `BomberGrid::detonate` |
 | Reference counting (`retain`/`release`) for objects shared between nodes | `GridTile::setBomb`, `BomberBomb` |
@@ -80,5 +81,6 @@ _game = std::make_unique<BomberGame>(_grid, _player, _enemies, std::make_unique<
 - `Source/BomberHud.*`, `Source/BomberGameOverLayer.*`: the on-screen labels and the end overlay.
 - `Source/BomberGrid.*`: builds the 13x11 map and runs bombs and explosions.
 - `Source/GridTile.*`: one cell of the map with its state, fire overlay and timers.
-- `Source/BomberPlayer.*`: the player and the enemies (`create(true)` makes an enemy).
+- `Source/BomberActor.*`: shared walking behavior (direction, destination, speed, spawn invincibility).
+- `Source/BomberPlayer.*`, `Source/BomberEnemy.*`: the blue player (can drop a bomb) and the green enemies.
 - `Source/BomberBomb.*`: the bomb sprite, linked back to the player who dropped it.

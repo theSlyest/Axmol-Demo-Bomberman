@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "BomberGrid.h"
+#include "BomberEnemy.h"
 #include "BomberPlayer.h"
 #include "EnemyBrain.h"
 
@@ -19,7 +20,7 @@ public:
     static constexpr int REWARD = 100;
 
     // `brain` drives the enemies; the default is RandomWalkBrain.
-    BomberGame(BomberGrid* grid, BomberPlayer* player, const std::vector<BomberPlayer*>& enemies,
+    BomberGame(BomberGrid* grid, BomberPlayer* player, const std::vector<BomberEnemy*>& enemies,
                std::unique_ptr<EnemyBrain> brain = nullptr);
 
     // Notifications for the view.
@@ -49,7 +50,7 @@ private:
 
     BomberGrid* _grid = nullptr;
     BomberPlayer* _player = nullptr;
-    std::vector<BomberPlayer*> _enemies;
+    std::vector<BomberEnemy*> _enemies;
     std::unique_ptr<EnemyBrain> _brain;
 
     void setScore(int score);
@@ -57,12 +58,12 @@ private:
     void setLives(int lives);
 
     void updatePlayer(float dt, const ax::Vec2& keyDirection);
-    void updateEnemy(float dt, BomberPlayer* enemy);
+    void updateEnemy(float dt, BomberEnemy* enemy);
     void updateTime(float dt);
 
 
     void tryBomb(BomberPlayer* player) const;
-    bool checkBurnt(const BomberPlayer* player) const;
+    bool checkBurnt(const BomberActor* actor) const;
     bool checkEnemyContact() const;
 
     void respawnPlayer() const;

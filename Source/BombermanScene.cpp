@@ -68,7 +68,7 @@ void BombermanScene::initPlayer()
 void BombermanScene::initEnemies()
 {
     for (int i = 0; i < 3; ++i) {
-        auto enemy = BomberPlayer::create(true);
+        auto enemy = BomberEnemy::create();
         _grid->addChild(enemy);
         _enemies.push_back(enemy);
     }

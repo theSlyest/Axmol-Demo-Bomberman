@@ -7,7 +7,7 @@
 
 USING_NS_AX;
 
-BomberGame::BomberGame(BomberGrid* grid, BomberPlayer* player, const std::vector<BomberPlayer*>& enemies,
+BomberGame::BomberGame(BomberGrid* grid, BomberPlayer* player, const std::vector<BomberEnemy*>& enemies,
                        std::unique_ptr<EnemyBrain> brain)
     : _grid(grid), _player(player), _enemies(enemies),
       _brain(brain ? std::move(brain) : std::make_unique<RandomWalkBrain>())
@@ -129,7 +129,7 @@ void BomberGame::movePlayer(const Vec2 &direction) const
     }
 }
 
-void BomberGame::updateEnemy(const float dt, BomberPlayer *enemy)
+void BomberGame::updateEnemy(const float dt, BomberEnemy *enemy)
 {
     if (!enemy->isVisible())
         return;
@@ -176,7 +176,7 @@ void BomberGame::updateEnemy(const float dt, BomberPlayer *enemy)
         setScore(_score + REWARD);
         enemy->setVisible(false);
 
-        if (std::ranges::none_of(_enemies, [](const BomberPlayer* e) { return e->isVisible(); }))
+        if (std::ranges::none_of(_enemies, [](const BomberEnemy* e) { return e->isVisible(); }))
             endGame();
     }
 }
@@ -214,16 +214,16 @@ void BomberGame::tryBomb(BomberPlayer* player) const
     }
 }
 
-bool BomberGame::checkBurnt(const BomberPlayer *player) const
+bool BomberGame::checkBurnt(const BomberActor *actor) const
 {
-    if (player->isInvincible())
+    if (actor->isInvincible())
         return false;
 
-    const auto tile1 = _grid->getTile(player->getPosition() + Vec2(BomberPlayer::OFFSET, BomberPlayer::OFFSET));
+    const auto tile1 = _grid->getTile(actor->getPosition() + Vec2(BomberActor::OFFSET, BomberActor::OFFSET));
     if (tile1->isOnFire())
         return true;
 
-    const auto tile2 = _grid->getTile(player->getPosition() + Vec2(GridTile::SIZE - BomberPlayer::OFFSET, GridTile::SIZE -BomberPlayer::OFFSET));
+    const auto tile2 = _grid->getTile(actor->getPosition() + Vec2(GridTile::SIZE - BomberActor::OFFSET, GridTile::SIZE - BomberActor::OFFSET));
     if (tile2 != tile1 && tile2->isOnFire())
         return true;
 
@@ -241,7 +241,7 @@ bool BomberGame::checkEnemyContact() const
             continue;
 
         const Vec2 delta = enemy->getPosition() - pos;
-        if (std::abs(delta.x) < BomberPlayer::SIZE && std::abs(delta.y) < BomberPlayer::SIZE)
+        if (std::abs(delta.x) < BomberActor::SIZE && std::abs(delta.y) < BomberActor::SIZE)
             return true;
     }
 
