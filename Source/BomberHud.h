@@ -16,9 +16,6 @@ public:
     void setTime(int time);
     void setLives(int lives);
 
-    // Text of the score label, e.g. to show it on the game-over screen.
-    std::string_view getScoreText() const { return _scoreLbl->getString(); }
-
 private:
     static constexpr float FONT_SIZE = 24.0f;
     static constexpr float OFFSET = 32.0f;

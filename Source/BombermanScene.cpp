@@ -33,7 +33,7 @@ void BombermanScene::update(const float dt)
 void BombermanScene::reset()
 {
     _controls->clearDirection();
-    _endLayer->setVisible(false);
+    _endLayer->hide();
     _game->reset();
 }
 
@@ -55,22 +55,8 @@ void BombermanScene::initGrid(const Vec2 &origin)
 
 void BombermanScene::initEndLayer()
 {
-    _endLayer = LayerColor::create(Color4B(0, 0, 0, 128));
-    _endLayer->setVisible(false);
+    _endLayer = BomberGameOverLayer::create();
     addChild(_endLayer);
-
-    Size size = _endLayer->getContentSize();
-    auto gameOver = Label::createWithTTF("GAME OVER", "fonts/arial.ttf", GAME_OVER_SIZE);
-    gameOver->setPosition(size.width / 2.0f, size.height / 2.0f);
-    _endLayer->addChild(gameOver);
-
-    _endScoreLbl = Label::createWithTTF("Score: 0", "fonts/arial.ttf", UI_FONT_SIZE);
-    _endScoreLbl->setPosition(size.width / 2.0f, size.height / 2.0f - 36.0f);
-    _endLayer->addChild(_endScoreLbl);
-
-    auto restart = Label::createWithTTF("Press R to Restart", "fonts/arial.ttf", HELP_SIZE);
-    restart->setPosition(size.width / 2.0f, size.height / 2.0f - 72.0f);
-    _endLayer->addChild(restart);
 }
 
 void BombermanScene::initPlayer()
@@ -106,8 +92,5 @@ void BombermanScene::initGame()
     _game->onScoreChanged = [this](const int score) { _hud->setScore(score); };
     _game->onTimeChanged  = [this](const int time)  { _hud->setTime(time); };
     _game->onLivesChanged = [this](const int lives) { _hud->setLives(lives); };
-    _game->onGameOver = [this] {
-        _endScoreLbl->setString(_hud->getScoreText());
-        _endLayer->setVisible(true);
-    };
+    _game->onGameOver = [this] { _endLayer->show(_game->getScore()); };
 }
