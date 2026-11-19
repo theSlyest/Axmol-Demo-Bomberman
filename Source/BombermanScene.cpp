@@ -13,9 +13,7 @@ bool BombermanScene::init()
     const auto visibleSize = _director->getVisibleSize();
     const Vec2 origin = _director->getVisibleOrigin();
 
-    initScore(origin, visibleSize);
-    initTime(origin, visibleSize);
-    initLives(origin, visibleSize);
+    initHud(origin, visibleSize);
     initGrid(origin);
     initEndLayer();
     initControls();
@@ -39,28 +37,11 @@ void BombermanScene::reset()
     _game->reset();
 }
 
-void BombermanScene::initScore(const Vec2 &origin, const Size &size)
+void BombermanScene::initHud(const Vec2 &origin, const Size &size)
 {
-    _scoreLbl = Label::createWithTTF("Score: 0", "fonts/arial.ttf", UI_FONT_SIZE);
-    _scoreLbl->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
-    _scoreLbl->setPosition(origin.x + UI_OFFSET, origin.y + size.height - UI_OFFSET);
-    addChild(_scoreLbl);
-}
-
-void BombermanScene::initTime(const Vec2 &origin, const Size &size)
-{
-    _timeLbl = Label::createWithTTF("Time: 0", "fonts/arial.ttf", UI_FONT_SIZE);
-    _timeLbl->setAnchorPoint(Vec2::ANCHOR_MIDDLE_TOP);
-    _timeLbl->setPosition(origin.x + size.width / 2.0f, origin.y + size.height - UI_OFFSET);
-    addChild(_timeLbl);
-}
-
-void BombermanScene::initLives(const Vec2 &origin, const Size &size)
-{
-    _livesLbl = Label::createWithTTF("Lives: 0", "fonts/arial.ttf", UI_FONT_SIZE);
-    _livesLbl->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
-    _livesLbl->setPosition(origin.x + size.width - UI_OFFSET, origin.y + size.height - UI_OFFSET);
-    addChild(_livesLbl);
+    _hud = BomberHud::create(size);
+    _hud->setPosition(origin);
+    addChild(_hud);
 }
 
 void BombermanScene::initGrid(const Vec2 &origin)
@@ -122,11 +103,11 @@ void BombermanScene::initControls()
 void BombermanScene::initGame()
 {
     _game = std::make_unique<BomberGame>(_grid, _player, _enemies);
-    _game->onScoreChanged = [this](const int score) { _scoreLbl->setString("Score: " + std::to_string(score)); };
-    _game->onTimeChanged  = [this](const int time)  { _timeLbl->setString("Time: " + std::to_string(time)); };
-    _game->onLivesChanged = [this](const int lives) { _livesLbl->setString("Lives: " + std::to_string(lives)); };
+    _game->onScoreChanged = [this](const int score) { _hud->setScore(score); };
+    _game->onTimeChanged  = [this](const int time)  { _hud->setTime(time); };
+    _game->onLivesChanged = [this](const int lives) { _hud->setLives(lives); };
     _game->onGameOver = [this] {
-        _endScoreLbl->setString(_scoreLbl->getString());
+        _endScoreLbl->setString(_hud->getScoreText());
         _endLayer->setVisible(true);
     };
 }
