@@ -2,6 +2,8 @@
 
 A small Bomberman built with [Axmol Engine](https://axmol.dev/) and C++, written as a learning resource. It covers basic grid-based bomb gameplay, and the code is split into small parts that are easy to read one at a time.
 
+![Gameplay screenshot](docs/screenshot.png)
+
 ## Gameplay
 
 - Move with the **arrow keys**, drop a bomb with **Space**, restart with **R**.
