@@ -75,6 +75,7 @@ private:
     void movePlayer(const ax::Vec2& direction) const;
 
     void updateEnemy(float dt, BomberPlayer* enemy);
+    bool isSafe(const ax::Vec2& pos) const;
     ax::Vec2 chooseDirection(const ax::Vec2& pos) const;
 
     void updateTime(float dt);

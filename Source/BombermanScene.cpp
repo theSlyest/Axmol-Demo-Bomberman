@@ -211,7 +211,7 @@ void BombermanScene::updatePlayer(const float dt)
             const Vec2 dest = _player->getDestination();
             if (direction == _keyDirection) {
                 const Vec2 nextDest = dest + direction * GridTile::SIZE;
-                if (_grid->getTile(nextDest)->getState() == TileState::SAFE) {
+                if (isSafe(nextDest)) {
                     _player->setPosition(nextPos);
                     _player->setDestination(nextDest);
                 }
@@ -223,7 +223,7 @@ void BombermanScene::updatePlayer(const float dt)
             else {
                 _player->setPosition(dest);
                 const Vec2 nextDest = dest + _keyDirection * GridTile::SIZE;
-                if (_keyDirection == Vec2::ZERO || _grid->getTile(nextDest)->getState() != TileState::SAFE)
+                if (_keyDirection == Vec2::ZERO || !isSafe(nextDest))
                     _player->setDirection(Vec2::ZERO);
                 else {
                     _player->setDestination(nextDest);
@@ -245,7 +245,7 @@ void BombermanScene::movePlayer(const Vec2 &direction) const
     const Vec2& oldDirection = _player->getDirection();
     if (oldDirection == Vec2::ZERO) {
         const Vec2 dest = _player->getPosition() + direction * GridTile::SIZE;
-        if (_grid->getTile(dest)->getState() == TileState::SAFE) {
+        if (isSafe(dest)) {
             _player->setDestination(dest);
             _player->setDirection(direction);
         }
@@ -264,13 +264,13 @@ void BombermanScene::updateEnemy(const float dt, BomberPlayer *enemy)
     const Vec2& direction = enemy->getDirection();
 
     if (direction != Vec2::ZERO) {
-        Vec2 nextPos = enemy->getPosition() + direction * enemy->getSpeed() * dt;
+        const Vec2 nextPos = enemy->getPosition() + direction * enemy->getSpeed() * dt;
         if (enemy->hasReachedDestination(nextPos)) {
-            const Vec2 nextDirection = chooseDirection(enemy->getDestination());
             const Vec2 dest = enemy->getDestination();
+            const Vec2 nextDirection = chooseDirection(dest);
             if (direction == nextDirection) {
                 const Vec2 nextDest = dest + direction * GridTile::SIZE;
-                if (_grid->getTile(nextDest)->getState() == TileState::SAFE) {
+                if (isSafe(nextDest)) {
                     enemy->setPosition(nextPos);
                     enemy->setDestination(nextDest);
                 }
@@ -282,7 +282,7 @@ void BombermanScene::updateEnemy(const float dt, BomberPlayer *enemy)
             else {
                 enemy->setPosition(dest);
                 const Vec2 nextDest = dest + nextDirection * GridTile::SIZE;
-                if (nextDirection == Vec2::ZERO || _grid->getTile(nextDest)->getState() != TileState::SAFE)
+                if (nextDirection == Vec2::ZERO || !isSafe(nextDest))
                     enemy->setDirection(Vec2::ZERO);
                 else {
                     enemy->setDestination(nextDest);
@@ -303,15 +303,7 @@ void BombermanScene::updateEnemy(const float dt, BomberPlayer *enemy)
         setScore(_score + REWARD);
         enemy->setVisible(false);
 
-        bool won = true;
-        for (const auto e : _enemies) {
-            if (e->isVisible()) {
-                won = false;
-                break;
-            }
-        }
-
-        if (won)
+        if (std::ranges::none_of(_enemies, [](const BomberPlayer* e) { return e->isVisible(); }))
             showGameOver();
     }
 }
@@ -321,8 +313,7 @@ Vec2 BombermanScene::chooseDirection(const Vec2& pos) const
     std::vector<Vec2> dirs;
     for (const auto& dir : DIRECTIONS) {
         const Vec2 next = pos + dir.second * GridTile::SIZE;
-        auto tile = _grid->getTile(next);
-        if (tile->getState() == TileState::SAFE)
+        if (isSafe(next))
             dirs.push_back(dir.second);
     }
 
@@ -330,6 +321,11 @@ Vec2 BombermanScene::chooseDirection(const Vec2& pos) const
         return Vec2::ZERO;
 
     return dirs[random(0ul, dirs.size() - 1)];
+}
+
+bool BombermanScene::isSafe(const Vec2& pos) const
+{
+    return _grid->getTile(pos)->getState() == TileState::SAFE;
 }
 
 void BombermanScene::updateTime(const float dt)
