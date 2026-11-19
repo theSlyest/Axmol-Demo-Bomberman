@@ -3,7 +3,10 @@
 #include "2d/Label.h"
 #include "2d/Layer.h"
 #include "2d/Scene.h"
+#include <memory>
+
 #include "BomberControls.h"
+#include "BomberGame.h"
 #include "BomberGrid.h"
 #include "BomberPlayer.h"
 
@@ -27,14 +30,6 @@ private:
     const float GAME_OVER_SIZE = 32.0f;
     const float HELP_SIZE = 18.0f;
     const float UI_OFFSET = 32.0f;
-    const int START_LIVES = 3;
-    const int START_TIME = 120;
-    const int REWARD = 100;
-
-    int _score = 0;
-    int _time  = 0;
-    int _lives = 0;
-    float _elapsed = 0;
 
     ax::Label* _scoreLbl = nullptr;
     ax::Label* _endScoreLbl = nullptr;
@@ -47,6 +42,7 @@ private:
     std::vector<BomberPlayer*> _enemies;
 
     BomberControls* _controls = nullptr;
+    std::unique_ptr<BomberGame> _game;
 
     void initScore(const ax::Vec2& origin, const ax::Size& size);
     void initTime(const ax::Vec2& origin, const ax::Size& size);
@@ -56,27 +52,5 @@ private:
     void initPlayer();
     void initEnemies();
     void initControls();
-
-    void setScore(int score);
-    void setTime(int time);
-    void setLives(int lives);
-
-    void updatePlayer(float dt);
-    void movePlayer(const ax::Vec2& direction) const;
-
-    void updateEnemy(float dt, BomberPlayer* enemy);
-    bool isSafe(const ax::Vec2& pos) const;
-    ax::Vec2 chooseDirection(const ax::Vec2& pos) const;
-
-    void updateTime(float dt);
-
-    void tryBomb(BomberPlayer* player) const;
-    bool checkBurnt(const BomberPlayer* player) const;
-    bool checkEnemyContact() const;
-    void respawnPlayer() const;
-
-    void showGameOver();
-    void loseLife();
-
-    void resetEnemies() const;
+    void initGame();
 };

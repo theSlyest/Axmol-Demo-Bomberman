@@ -1,7 +1,6 @@
 #include "BombermanScene.h"
 
 #include "Director.h"
-#include "Directions.h"
 
 USING_NS_AX;
 
@@ -20,40 +19,28 @@ bool BombermanScene::init()
     initGrid(origin);
     initEndLayer();
     initControls();
+    initGame();
 
     reset();
+    scheduleUpdate();
 
     return true;
 }
 
 void BombermanScene::update(const float dt)
 {
-    updateTime(dt);
-    _grid->update(dt);
-    updatePlayer(dt);
-    for (const auto enemy : _enemies)
-        updateEnemy(dt, enemy);
+    _game->update(dt, _controls->getDirection());
 }
 
 void BombermanScene::reset()
 {
-    _grid->reset();
-    respawnPlayer();
-    _player->setInvincible(false);
-    _player->clearBomb();
     _controls->clearDirection();
-    resetEnemies();
-    setLives(START_LIVES);
-    setTime(START_TIME);
-    _elapsed = 0.0f;
-    setScore(0);
     _endLayer->setVisible(false);
-    scheduleUpdate();
+    _game->reset();
 }
 
 void BombermanScene::initScore(const Vec2 &origin, const Size &size)
 {
-    _score = 0;
     _scoreLbl = Label::createWithTTF("Score: 0", "fonts/arial.ttf", UI_FONT_SIZE);
     _scoreLbl->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
     _scoreLbl->setPosition(origin.x + UI_OFFSET, origin.y + size.height - UI_OFFSET);
@@ -62,7 +49,6 @@ void BombermanScene::initScore(const Vec2 &origin, const Size &size)
 
 void BombermanScene::initTime(const Vec2 &origin, const Size &size)
 {
-    _time = 0;
     _timeLbl = Label::createWithTTF("Time: 0", "fonts/arial.ttf", UI_FONT_SIZE);
     _timeLbl->setAnchorPoint(Vec2::ANCHOR_MIDDLE_TOP);
     _timeLbl->setPosition(origin.x + size.width / 2.0f, origin.y + size.height - UI_OFFSET);
@@ -71,7 +57,6 @@ void BombermanScene::initTime(const Vec2 &origin, const Size &size)
 
 void BombermanScene::initLives(const Vec2 &origin, const Size &size)
 {
-    _lives = 0;
     _livesLbl = Label::createWithTTF("Lives: 0", "fonts/arial.ttf", UI_FONT_SIZE);
     _livesLbl->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
     _livesLbl->setPosition(origin.x + size.width - UI_OFFSET, origin.y + size.height - UI_OFFSET);
@@ -126,261 +111,22 @@ void BombermanScene::initControls()
 {
     _controls = BomberControls::create();
     _controls->onDirectionPressed = [this](const Vec2& direction) {
-        if (!_endLayer->isVisible())
-            movePlayer(direction);
+        if (!_game->isOver())
+            _game->movePlayer(direction);
     };
-    _controls->onBomb = [this] {
-        if (!_endLayer->isVisible())
-            tryBomb(_player);
-    };
+    _controls->onBomb = [this] { _game->dropBomb(); };
     _controls->onRestart = [this] { reset(); };
     addChild(_controls);
 }
 
-void BombermanScene::setScore(const int score)
+void BombermanScene::initGame()
 {
-    _score = score;
-    _scoreLbl->setString("Score: " + std::to_string(score));
-}
-
-void BombermanScene::setTime(const int time)
-{
-    _time = time;
-    _timeLbl->setString("Time: " + std::to_string(time));
-}
-
-void BombermanScene::setLives(const int lives)
-{
-    _lives = lives;
-    _livesLbl->setString("Lives: " + std::to_string(lives));
-}
-
-void BombermanScene::updatePlayer(const float dt)
-{
-    _player->update(dt);
-    const Vec2& keyDirection = _controls->getDirection();
-
-    if (const Vec2& direction = _player->getDirection(); direction != Vec2::ZERO) {
-        const Vec2 nextPos = _player->getPosition() + direction * _player->getSpeed() * dt;
-        if (_player->hasReachedDestination(nextPos)) {
-            const Vec2 dest = _player->getDestination();
-            if (direction == keyDirection) {
-                const Vec2 nextDest = dest + direction * GridTile::SIZE;
-                if (isSafe(nextDest)) {
-                    _player->setPosition(nextPos);
-                    _player->setDestination(nextDest);
-                }
-                else {
-                    _player->setPosition(dest);
-                    _player->setDirection(Vec2::ZERO);
-                }
-            }
-            else {
-                _player->setPosition(dest);
-                const Vec2 nextDest = dest + keyDirection * GridTile::SIZE;
-                if (keyDirection == Vec2::ZERO || !isSafe(nextDest))
-                    _player->setDirection(Vec2::ZERO);
-                else {
-                    _player->setDestination(nextDest);
-                    _player->setDirection(keyDirection);
-                }
-            }
-        }
-        else {
-            _player->setPosition(nextPos);
-        }
-    }
-
-    if (checkBurnt(_player) || checkEnemyContact())
-        loseLife();
-}
-
-void BombermanScene::movePlayer(const Vec2 &direction) const
-{
-    const Vec2& oldDirection = _player->getDirection();
-    if (oldDirection == Vec2::ZERO) {
-        const Vec2 dest = _player->getPosition() + direction * GridTile::SIZE;
-        if (isSafe(dest)) {
-            _player->setDestination(dest);
-            _player->setDirection(direction);
-        }
-    }
-    else if (oldDirection + direction == Vec2::ZERO) {
-        _player->setDestination(_player->getDestination() + direction * GridTile::SIZE);
-        _player->setDirection(direction);
-    }
-}
-
-void BombermanScene::updateEnemy(const float dt, BomberPlayer *enemy)
-{
-    if (!enemy->isVisible())
-        return;
-
-    const Vec2& direction = enemy->getDirection();
-
-    if (direction != Vec2::ZERO) {
-        const Vec2 nextPos = enemy->getPosition() + direction * enemy->getSpeed() * dt;
-        if (enemy->hasReachedDestination(nextPos)) {
-            const Vec2 dest = enemy->getDestination();
-            const Vec2 nextDirection = chooseDirection(dest);
-            if (direction == nextDirection) {
-                const Vec2 nextDest = dest + direction * GridTile::SIZE;
-                if (isSafe(nextDest)) {
-                    enemy->setPosition(nextPos);
-                    enemy->setDestination(nextDest);
-                }
-                else {
-                    enemy->setPosition(dest);
-                    enemy->setDirection(Vec2::ZERO);
-                }
-            }
-            else {
-                enemy->setPosition(dest);
-                const Vec2 nextDest = dest + nextDirection * GridTile::SIZE;
-                if (nextDirection == Vec2::ZERO || !isSafe(nextDest))
-                    enemy->setDirection(Vec2::ZERO);
-                else {
-                    enemy->setDestination(nextDest);
-                    enemy->setDirection(nextDirection);
-                }
-            }
-        }
-        else
-            enemy->setPosition(nextPos);
-    }
-    else {
-        const Vec2 nextDirection = chooseDirection(enemy->getPosition());
-        enemy->setDestination(enemy->getPosition() + nextDirection * GridTile::SIZE);
-        enemy->setDirection(nextDirection);
-    }
-
-    if (checkBurnt(enemy)) {
-        setScore(_score + REWARD);
-        enemy->setVisible(false);
-
-        if (std::ranges::none_of(_enemies, [](const BomberPlayer* e) { return e->isVisible(); }))
-            showGameOver();
-    }
-}
-
-Vec2 BombermanScene::chooseDirection(const Vec2& pos) const
-{
-    std::vector<Vec2> dirs;
-    for (const auto& dir : DIRECTIONS) {
-        if (isSafe(pos + dir * GridTile::SIZE))
-            dirs.push_back(dir);
-    }
-
-    if (dirs.empty())
-        return Vec2::ZERO;
-
-    return dirs[random(0ul, dirs.size() - 1)];
-}
-
-bool BombermanScene::isSafe(const Vec2& pos) const
-{
-    return _grid->getTile(pos)->getState() == TileState::SAFE;
-}
-
-void BombermanScene::updateTime(const float dt)
-{
-    _elapsed += dt;
-    if (_elapsed >= 1.0f) {
-        setTime(_time - 1);
-
-        if (_time == 0)
-            showGameOver();
-
-        _elapsed -= 1.0f;
-    }
-}
-
-void BombermanScene::tryBomb(BomberPlayer* player) const
-{
-    if (player->hasBomb())
-        return;
-
-    const auto tile = _grid->getTile(player->getPosition() + Vec2(GridTile::SIZE, GridTile::SIZE) / 2.0f);
-    if (tile->getState() != TileState::SAFE)
-        return;
-
-    if (tile->isOnFire())
-        _grid->detonate(tile);
-    else {
-        const auto bomb = BomberBomb::create(player);
-        bomb->setPosition(tile->getPosition());
-        _grid->addChild(bomb);
-        tile->setBomb(bomb);
-        player->dropBomb();
-    }
-}
-
-bool BombermanScene::checkBurnt(const BomberPlayer *player) const
-{
-    if (player->isInvincible())
-        return false;
-
-    const auto tile1 = _grid->getTile(player->getPosition() + Vec2(BomberPlayer::OFFSET, BomberPlayer::OFFSET));
-    if (tile1->isOnFire())
-        return true;
-
-    const auto tile2 = _grid->getTile(player->getPosition() + Vec2(GridTile::SIZE - BomberPlayer::OFFSET, GridTile::SIZE -BomberPlayer::OFFSET));
-    if (tile2 != tile1 && tile2->isOnFire())
-        return true;
-
-    return false;
-}
-
-void BombermanScene::showGameOver()
-{
-    unscheduleUpdate();
-    _endScoreLbl->setString(_scoreLbl->getString());
-    _endLayer->setVisible(true);
-}
-
-bool BombermanScene::checkEnemyContact() const
-{
-    if (_player->isInvincible())
-        return false;
-
-    const Vec2 pos = _player->getPosition();
-    for (const auto enemy : _enemies) {
-        if (!enemy->isVisible())
-            continue;
-
-        const Vec2 delta = enemy->getPosition() - pos;
-        if (std::abs(delta.x) < BomberPlayer::SIZE && std::abs(delta.y) < BomberPlayer::SIZE)
-            return true;
-    }
-
-    return false;
-}
-
-void BombermanScene::respawnPlayer() const
-{
-    _player->setPosition(_grid->getTilePosition(1, 1));
-    _player->setDirection(Vec2::ZERO);
-    _player->setDestination(_player->getPosition());
-}
-
-void BombermanScene::loseLife()
-{
-    setLives(_lives - 1);
-    if (_lives == 0)
-        showGameOver();
-    else {
-        respawnPlayer();
-        _player->setInvincible(true);
-    }
-}
-
-void BombermanScene::resetEnemies() const
-{
-    _enemies[0]->setPosition(_grid->getTilePosition(1, 9));
-    _enemies[1]->setPosition(_grid->getTilePosition(11, 1));
-    _enemies[2]->setPosition(_grid->getTilePosition(11, 9));
-    for (const auto& enemy : _enemies) {
-        enemy->setDirection(Vec2::ZERO);
-        enemy->setVisible(true);
-    }
+    _game = std::make_unique<BomberGame>(_grid, _player, _enemies);
+    _game->onScoreChanged = [this](const int score) { _scoreLbl->setString("Score: " + std::to_string(score)); };
+    _game->onTimeChanged  = [this](const int time)  { _timeLbl->setString("Time: " + std::to_string(time)); };
+    _game->onLivesChanged = [this](const int lives) { _livesLbl->setString("Lives: " + std::to_string(lives)); };
+    _game->onGameOver = [this] {
+        _endScoreLbl->setString(_scoreLbl->getString());
+        _endLayer->setVisible(true);
+    };
 }
