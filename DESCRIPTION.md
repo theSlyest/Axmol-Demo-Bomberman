@@ -26,7 +26,8 @@ A minimal Bomberman built with Axmol. It covers basic gameplay only: no power-up
 | Inheritance for shared behavior (`BomberActor` → `BomberPlayer`, `BomberEnemy`) | `BomberActor` |
 | Procedural drawing with `DrawNode`, no image assets | `GridTile`, `BomberPlayer`, `BomberEnemy`, `BomberBomb` |
 | Tile state machine (`SAFE`, `WALL`, `STEEL`, `BOMB`) and timers | `GridTile`, `BomberGrid::update` |
-| Chain-reaction explosions | `BomberGrid::detonate` |
+| Chain-reaction explosions, with the blast range as a constant | `BomberGrid::detonate`, `BomberGrid::BLAST_RANGE` |
+| Grid coordinates vs. pixel positions kept inside the grid | `BomberGrid::coordsToPosition`, `positionToCoords`, `neighborPosition`, `getTileAtCenter` |
 | Reference counting (`retain`/`release`) for objects shared between nodes | `GridTile::setBomb`, `BomberBomb` |
 
 ## Architecture
@@ -45,6 +46,18 @@ BombermanScene          creates the nodes, wires everything, forwards update(dt)
 ```
 
 Each frame the scene passes the held direction from `BomberControls` to `BomberGame::update`. The game updates the world and notifies the scene, which updates the HUD or shows the overlay.
+
+### The grid owns the geometry
+
+`BomberGrid` is the only place that knows the tile size. Game code and enemy brains ask it questions instead of doing the math:
+
+```cpp
+BomberGrid::neighborPosition(pos, direction);  // position of the next tile
+grid.isSafe(pos);                              // can something walk here?
+grid.getTileAtCenter(actor->getPosition());    // tile under an actor
+```
+
+Changing `GridTile::SIZE` or `BomberGrid::BLAST_RANGE` changes the game without touching the rules.
 
 ### Try it: change how enemies behave
 
@@ -79,7 +92,7 @@ _game = std::make_unique<BomberGame>(_grid, _player, _enemies, std::make_unique<
 - `Source/BomberGame.*`: score, lives, time, movement, bombs, fire, win and lose.
 - `Source/EnemyBrain.h`, `Source/RandomWalkBrain.*`: the enemy decision interface and its default.
 - `Source/BomberHud.*`, `Source/BomberGameOverLayer.*`: the on-screen labels and the end overlay.
-- `Source/BomberGrid.*`: builds the 13x11 map and runs bombs and explosions.
+- `Source/BomberGrid.*`: builds the 13x11 map, runs bombs and explosions, and converts between tile coordinates and positions so other code never does tile-size arithmetic.
 - `Source/GridTile.*`: one cell of the map with its state, fire overlay and timers.
 - `Source/BomberActor.*`: shared walking behavior (direction, destination, speed, spawn invincibility).
 - `Source/BomberPlayer.*`, `Source/BomberEnemy.*`: the blue player (can drop a bomb) and the green enemies.
