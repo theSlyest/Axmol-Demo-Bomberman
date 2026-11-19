@@ -1,5 +1,7 @@
 # Axmol Demo: Bomberman
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A small Bomberman built with [Axmol Engine](https://axmol.dev/) and C++, written as a learning resource. It covers basic grid-based bomb gameplay, and the code is split into small parts that are easy to read one at a time.
 
 ![Gameplay screenshot](docs/screenshot.png)
