@@ -38,8 +38,8 @@ public:
     void movePlayer(const ax::Vec2& direction) const;
     void dropBomb() const;
 
-    bool isOver() const { return _over; }
-    int getScore() const { return _score; }
+    [[nodiscard]] bool isOver() const { return _over; }
+    [[nodiscard]] int getScore() const { return _score; }
 
 private:
     int _score = 0;
@@ -64,7 +64,7 @@ private:
 
     void tryBomb(BomberPlayer* player) const;
     bool checkBurnt(const BomberActor* actor) const;
-    bool checkEnemyContact() const;
+    [[nodiscard]] bool checkEnemyContact() const;
 
     void respawnPlayer() const;
     void resetEnemies() const;

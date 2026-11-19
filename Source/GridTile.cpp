@@ -76,11 +76,10 @@ bool GridTile::updateState(const float dt)
     if (_state == TileState::BOMB || _fire->isVisible()) {
         _remaining -= dt;
         if (_remaining <= 0.0f) {
-            if (_state == TileState::BOMB) {
+            if (_state == TileState::BOMB)
                 return true;
-            }
-            else
-                stopFire();
+
+            stopFire();
         }
     }
 

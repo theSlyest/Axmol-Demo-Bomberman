@@ -1,7 +1,6 @@
 #pragma once
 
 #include <functional>
-#include <map>
 
 #include "2d/Node.h"
 #include "EventListenerKeyboard.h"
