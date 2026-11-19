@@ -1,10 +1,12 @@
 #pragma once
 
 #include <functional>
+#include <memory>
 #include <vector>
 
 #include "BomberGrid.h"
 #include "BomberPlayer.h"
+#include "EnemyBrain.h"
 
 // The rules of the game: movement, bombs, fire, lives, score and time.
 // It works on nodes it is given but does not create them, and it never touches
@@ -16,7 +18,9 @@ public:
     static constexpr int START_TIME = 120;
     static constexpr int REWARD = 100;
 
-    BomberGame(BomberGrid* grid, BomberPlayer* player, const std::vector<BomberPlayer*>& enemies);
+    // `brain` drives the enemies; the default is RandomWalkBrain.
+    BomberGame(BomberGrid* grid, BomberPlayer* player, const std::vector<BomberPlayer*>& enemies,
+               std::unique_ptr<EnemyBrain> brain = nullptr);
 
     // Notifications for the view.
     std::function<void(int)> onScoreChanged;
@@ -46,6 +50,7 @@ private:
     BomberGrid* _grid = nullptr;
     BomberPlayer* _player = nullptr;
     std::vector<BomberPlayer*> _enemies;
+    std::unique_ptr<EnemyBrain> _brain;
 
     void setScore(int score);
     void setTime(int time);
@@ -55,8 +60,6 @@ private:
     void updateEnemy(float dt, BomberPlayer* enemy);
     void updateTime(float dt);
 
-    bool isSafe(const ax::Vec2& pos) const;
-    ax::Vec2 chooseDirection(const ax::Vec2& pos) const;
 
     void tryBomb(BomberPlayer* player) const;
     bool checkBurnt(const BomberPlayer* player) const;

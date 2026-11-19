@@ -21,6 +21,7 @@ public:
     void setTileState(const int col, const int row, const TileState state) const { _tiles[col][row]->setState(state); }
 
     GridTile* getTile(const ax::Vec2& position) const;
+    bool isSafe(const ax::Vec2& position) const { return getTile(position)->getState() == TileState::SAFE; }
     GridCoords getCoords(const ax::Vec2& position) const;
 
     void reset() const;
