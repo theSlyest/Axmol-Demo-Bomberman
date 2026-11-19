@@ -1,7 +1,7 @@
 #include "BombermanScene.h"
 
 #include "Director.h"
-#include "EventDispatcher.h"
+#include "Directions.h"
 
 USING_NS_AX;
 
@@ -19,7 +19,7 @@ bool BombermanScene::init()
     initLives(origin, visibleSize);
     initGrid(origin);
     initEndLayer();
-    initKeyboardListener();
+    initControls();
 
     reset();
 
@@ -41,7 +41,7 @@ void BombermanScene::reset()
     respawnPlayer();
     _player->setInvincible(false);
     _player->clearBomb();
-    _keyDirection = Vec2::ZERO;
+    _controls->clearDirection();
     resetEnemies();
     setLives(START_LIVES);
     setTime(START_TIME);
@@ -122,14 +122,19 @@ void BombermanScene::initEnemies()
     }
 }
 
-void BombermanScene::initKeyboardListener()
+void BombermanScene::initControls()
 {
-    _keyboardListener = EventListenerKeyboard::create();
-    _keyboardListener->onKeyPressed = [this](EventKeyboard::KeyCode key, Event *) { onKeyPressed(key); };
-    _keyboardListener->onKeyReleased = [this](EventKeyboard::KeyCode key, Event *) { onKeyReleased(key); };
-    _eventDispatcher->addEventListenerWithSceneGraphPriority(_keyboardListener, this);
-
-    _keyDirection = Vec2::ZERO;
+    _controls = BomberControls::create();
+    _controls->onDirectionPressed = [this](const Vec2& direction) {
+        if (!_endLayer->isVisible())
+            movePlayer(direction);
+    };
+    _controls->onBomb = [this] {
+        if (!_endLayer->isVisible())
+            tryBomb(_player);
+    };
+    _controls->onRestart = [this] { reset(); };
+    addChild(_controls);
 }
 
 void BombermanScene::setScore(const int score)
@@ -150,66 +155,16 @@ void BombermanScene::setLives(const int lives)
     _livesLbl->setString("Lives: " + std::to_string(lives));
 }
 
-void BombermanScene::onKeyPressed(const EventKeyboard::KeyCode key)
-{
-    switch (key) {
-        case EventKeyboard::KeyCode::KEY_LEFT_ARROW:
-        case EventKeyboard::KeyCode::KEY_RIGHT_ARROW:
-        case EventKeyboard::KeyCode::KEY_UP_ARROW:
-        case EventKeyboard::KeyCode::KEY_DOWN_ARROW:
-            if (_endLayer->isVisible())
-                return;
-
-            if (_keyDirection != Vec2::ZERO)
-                return;
-    
-            _keyDirection = DIRECTIONS.at(key);
-            movePlayer(_keyDirection);
-            break;
-
-        case EventKeyboard::KeyCode::KEY_SPACE:
-            if (_endLayer->isVisible())
-                return;
-
-            tryBomb(_player);
-            break;
-
-        case EventKeyboard::KeyCode::KEY_R:
-            reset();
-            break;
-
-        default:
-            break;
-        }
-}
-
-void BombermanScene::onKeyReleased(EventKeyboard::KeyCode key)
-{
-    switch (key) {
-        case EventKeyboard::KeyCode::KEY_LEFT_ARROW:
-        case EventKeyboard::KeyCode::KEY_RIGHT_ARROW:
-        case EventKeyboard::KeyCode::KEY_UP_ARROW:
-        case EventKeyboard::KeyCode::KEY_DOWN_ARROW:
-            if (_keyDirection != DIRECTIONS.at(key))
-                return;
-            
-            _keyDirection = Vec2::ZERO;
-            break;
-
-        default:
-            break;
-        }
-}
-
 void BombermanScene::updatePlayer(const float dt)
 {
     _player->update(dt);
+    const Vec2& keyDirection = _controls->getDirection();
 
     if (const Vec2& direction = _player->getDirection(); direction != Vec2::ZERO) {
         const Vec2 nextPos = _player->getPosition() + direction * _player->getSpeed() * dt;
         if (_player->hasReachedDestination(nextPos)) {
             const Vec2 dest = _player->getDestination();
-            if (direction == _keyDirection) {
+            if (direction == keyDirection) {
                 const Vec2 nextDest = dest + direction * GridTile::SIZE;
                 if (isSafe(nextDest)) {
                     _player->setPosition(nextPos);
@@ -222,12 +177,12 @@ void BombermanScene::updatePlayer(const float dt)
             }
             else {
                 _player->setPosition(dest);
-                const Vec2 nextDest = dest + _keyDirection * GridTile::SIZE;
-                if (_keyDirection == Vec2::ZERO || !isSafe(nextDest))
+                const Vec2 nextDest = dest + keyDirection * GridTile::SIZE;
+                if (keyDirection == Vec2::ZERO || !isSafe(nextDest))
                     _player->setDirection(Vec2::ZERO);
                 else {
                     _player->setDestination(nextDest);
-                    _player->setDirection(_keyDirection);
+                    _player->setDirection(keyDirection);
                 }
             }
         }
@@ -312,9 +267,8 @@ Vec2 BombermanScene::chooseDirection(const Vec2& pos) const
 {
     std::vector<Vec2> dirs;
     for (const auto& dir : DIRECTIONS) {
-        const Vec2 next = pos + dir.second * GridTile::SIZE;
-        if (isSafe(next))
-            dirs.push_back(dir.second);
+        if (isSafe(pos + dir * GridTile::SIZE))
+            dirs.push_back(dir);
     }
 
     if (dirs.empty())

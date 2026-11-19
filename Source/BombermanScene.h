@@ -3,7 +3,7 @@
 #include "2d/Label.h"
 #include "2d/Layer.h"
 #include "2d/Scene.h"
-#include "EventListenerKeyboard.h"
+#include "BomberControls.h"
 #include "BomberGrid.h"
 #include "BomberPlayer.h"
 
@@ -30,12 +30,6 @@ private:
     const int START_LIVES = 3;
     const int START_TIME = 120;
     const int REWARD = 100;
-    const std::map<ax::EventKeyboard::KeyCode, ax::Vec2> DIRECTIONS = {
-        { ax::EventKeyboard::KeyCode::KEY_UP_ARROW,    ax::Vec2( 0,  1) },
-        { ax::EventKeyboard::KeyCode::KEY_DOWN_ARROW,  ax::Vec2( 0, -1) },
-        { ax::EventKeyboard::KeyCode::KEY_RIGHT_ARROW, ax::Vec2( 1,  0) },
-        { ax::EventKeyboard::KeyCode::KEY_LEFT_ARROW,  ax::Vec2(-1,  0) }
-    };
 
     int _score = 0;
     int _time  = 0;
@@ -52,8 +46,7 @@ private:
     BomberPlayer* _player = nullptr;
     std::vector<BomberPlayer*> _enemies;
 
-    ax::EventListenerKeyboard* _keyboardListener = nullptr;
-    ax::Vec2 _keyDirection;
+    BomberControls* _controls = nullptr;
 
     void initScore(const ax::Vec2& origin, const ax::Size& size);
     void initTime(const ax::Vec2& origin, const ax::Size& size);
@@ -62,14 +55,11 @@ private:
     void initEndLayer();
     void initPlayer();
     void initEnemies();
-    void initKeyboardListener();
+    void initControls();
 
     void setScore(int score);
     void setTime(int time);
     void setLives(int lives);
-
-    void onKeyPressed(ax::EventKeyboard::KeyCode key);
-    void onKeyReleased(ax::EventKeyboard::KeyCode key);
 
     void updatePlayer(float dt);
     void movePlayer(const ax::Vec2& direction) const;
