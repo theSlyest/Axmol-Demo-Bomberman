@@ -18,7 +18,7 @@ There are no image assets: everything is drawn with `DrawNode`.
 
 * A C++ development environment
 * [CMake](https://cmake.org/) 3.22 or later
-* [Axmol Engine](https://github.com/axmolengine/axmol) and the platform tools it requires
+* [Axmol Engine](https://github.com/axmolengine/axmol) 2.x and the platform tools it requires
 
 Refer to the [Axmol documentation](https://axmol.dev/manual/latest/) for installation and platform setup.
 
