@@ -83,7 +83,7 @@ void BomberGame::updatePlayer(const float dt, const Vec2& keyDirection)
         if (_player->hasReachedDestination(nextPos)) {
             const Vec2 dest = _player->getDestination();
             if (direction == keyDirection) {
-                const Vec2 nextDest = dest + direction * GridTile::SIZE;
+                const Vec2 nextDest = BomberGrid::neighborPosition(dest, direction);
                 if (_grid->isSafe(nextDest)) {
                     _player->setPosition(nextPos);
                     _player->setDestination(nextDest);
@@ -95,7 +95,7 @@ void BomberGame::updatePlayer(const float dt, const Vec2& keyDirection)
             }
             else {
                 _player->setPosition(dest);
-                const Vec2 nextDest = dest + keyDirection * GridTile::SIZE;
+                const Vec2 nextDest = BomberGrid::neighborPosition(dest, keyDirection);
                 if (keyDirection == Vec2::ZERO || !_grid->isSafe(nextDest))
                     _player->setDirection(Vec2::ZERO);
                 else {
@@ -117,14 +117,14 @@ void BomberGame::movePlayer(const Vec2 &direction) const
 {
     const Vec2& oldDirection = _player->getDirection();
     if (oldDirection == Vec2::ZERO) {
-        const Vec2 dest = _player->getPosition() + direction * GridTile::SIZE;
+        const Vec2 dest = BomberGrid::neighborPosition(_player->getPosition(), direction);
         if (_grid->isSafe(dest)) {
             _player->setDestination(dest);
             _player->setDirection(direction);
         }
     }
     else if (oldDirection + direction == Vec2::ZERO) {
-        _player->setDestination(_player->getDestination() + direction * GridTile::SIZE);
+        _player->setDestination(BomberGrid::neighborPosition(_player->getDestination(), direction));
         _player->setDirection(direction);
     }
 }
@@ -142,7 +142,7 @@ void BomberGame::updateEnemy(const float dt, BomberEnemy *enemy)
             const Vec2 dest = enemy->getDestination();
             const Vec2 nextDirection = _brain->chooseDirection(*_grid, dest);
             if (direction == nextDirection) {
-                const Vec2 nextDest = dest + direction * GridTile::SIZE;
+                const Vec2 nextDest = BomberGrid::neighborPosition(dest, direction);
                 if (_grid->isSafe(nextDest)) {
                     enemy->setPosition(nextPos);
                     enemy->setDestination(nextDest);
@@ -154,7 +154,7 @@ void BomberGame::updateEnemy(const float dt, BomberEnemy *enemy)
             }
             else {
                 enemy->setPosition(dest);
-                const Vec2 nextDest = dest + nextDirection * GridTile::SIZE;
+                const Vec2 nextDest = BomberGrid::neighborPosition(dest, nextDirection);
                 if (nextDirection == Vec2::ZERO || !_grid->isSafe(nextDest))
                     enemy->setDirection(Vec2::ZERO);
                 else {
@@ -168,7 +168,7 @@ void BomberGame::updateEnemy(const float dt, BomberEnemy *enemy)
     }
     else {
         const Vec2 nextDirection = _brain->chooseDirection(*_grid, enemy->getPosition());
-        enemy->setDestination(enemy->getPosition() + nextDirection * GridTile::SIZE);
+        enemy->setDestination(BomberGrid::neighborPosition(enemy->getPosition(), nextDirection));
         enemy->setDirection(nextDirection);
     }
 
@@ -199,7 +199,7 @@ void BomberGame::tryBomb(BomberPlayer* player) const
     if (player->hasBomb())
         return;
 
-    const auto tile = _grid->getTile(player->getPosition() + Vec2(GridTile::SIZE, GridTile::SIZE) / 2.0f);
+    const auto tile = _grid->getTileAtCenter(player->getPosition());
     if (tile->getState() != TileState::SAFE)
         return;
 

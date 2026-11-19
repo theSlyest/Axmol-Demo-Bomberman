@@ -36,12 +36,18 @@ bool BomberGrid::init()
 
 GridTile* BomberGrid::getTile(const Vec2 &position) const
 {
-    return _tiles[position.x / GridTile::SIZE][position.y / GridTile::SIZE];
+    const auto [col, row] = positionToCoords(position);
+    return _tiles[col][row];
 }
 
-GridCoords BomberGrid::getCoords(const Vec2 &position) const
+GridTile* BomberGrid::getTileAtCenter(const Vec2& position) const
 {
-    return { position.x / GridTile::SIZE, position.y / GridTile::SIZE };
+    return getTile(position + Vec2(GridTile::SIZE, GridTile::SIZE) / 2.0f);
+}
+
+GridCoords BomberGrid::positionToCoords(const Vec2 &position)
+{
+    return { static_cast<int>(position.x / GridTile::SIZE), static_cast<int>(position.y / GridTile::SIZE) };
 }
 
 void BomberGrid::reset() const
@@ -87,7 +93,7 @@ void BomberGrid::detonate(const int col, const int row)
     bool goRight = true;
     bool goDown = true;
 
-    for (int i = 1; i < 3; ++i) {
+    for (int i = 1; i <= BLAST_RANGE; ++i) {
         if (goRight) {
             const int next = col + i;
             goRight = tryFire(next, row);
@@ -112,7 +118,7 @@ void BomberGrid::detonate(const int col, const int row)
 
 void BomberGrid::detonate(const GridTile *tile)
 {
-    const GridCoords& coords = getCoords(tile->getPosition());
+    const GridCoords& coords = positionToCoords(tile->getPosition());
     detonate(coords.first, coords.second);
 }
 
