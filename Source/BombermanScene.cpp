@@ -26,7 +26,7 @@ bool BombermanScene::init()
     return true;
 }
 
-void BombermanScene::update(float dt)
+void BombermanScene::update(const float dt)
 {
     updateTime(dt);
     _grid->update(dt);
